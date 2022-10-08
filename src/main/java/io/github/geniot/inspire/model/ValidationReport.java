@@ -2,7 +2,8 @@ package io.github.geniot.inspire.model;
 
 import lombok.Data;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class ValidationReport {

@@ -1,9 +1,7 @@
 package io.github.geniot;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.geniot.inspire.model.DataRecord;
 import io.github.geniot.inspire.Main;
+import io.github.geniot.inspire.model.DataRecord;
 import io.github.geniot.inspire.model.InvalidType;
 import io.github.geniot.inspire.model.ValidationError;
 import io.github.geniot.inspire.model.ValidationReport;
@@ -11,7 +9,6 @@ import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
