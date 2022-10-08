@@ -28,15 +28,11 @@ public class Main {
 
     public static ValidationReport validate(DataRecord[] dataRecords) {
         ValidationReport validationReport = new ValidationReport();
-        Set<String> transactionReferences = new HashSet<>();
+        Set<Long> transactionReferences = new HashSet<>();
         for (DataRecord dataRecord : dataRecords) {
 
-            BigDecimal balance = new BigDecimal(dataRecord.getStartBalance());
-            BigDecimal mutation = new BigDecimal(dataRecord.getMutation());
-            BigDecimal endBalance = new BigDecimal(dataRecord.getEndBalance());
-
             boolean isDuplicate = transactionReferences.contains(dataRecord.getReference());
-            boolean isEndBalanceIncorrect = !endBalance.equals(balance.add(mutation));
+            boolean isEndBalanceIncorrect = !dataRecord.getEndBalance().equals(dataRecord.getStartBalance().add(dataRecord.getMutation()));
 
             transactionReferences.add(dataRecord.getReference());
 
@@ -76,13 +72,16 @@ public class Main {
             iterator.next();//skipping the header
             while (iterator.hasNext()) {
                 CSVRecord record = iterator.next();
+
                 DataRecord rec = new DataRecord();
-                rec.setReference(record.get(0));
+                rec.setReference(Long.parseLong(record.get(0)));
                 rec.setAccountNumber(record.get(1));
                 rec.setDescription(record.get(2));
-                rec.setStartBalance(record.get(3));
-                rec.setMutation(record.get(4));
-                rec.setEndBalance(record.get(5));
+
+                rec.setStartBalance(new BigDecimal(record.get(3)));
+                rec.setMutation(new BigDecimal(record.get(4)));
+                rec.setEndBalance(new BigDecimal(record.get(5)));
+
                 recordsList.add(rec);
             }
             return recordsList.toArray(new DataRecord[0]);

@@ -10,6 +10,7 @@ import io.github.geniot.inspire.model.ValidationReport;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -67,11 +68,11 @@ public class ValidationTest {
 
     private DataRecord buildDataRecord(String reference, String description, String startBalance, String mutation, String endBalance) {
         DataRecord dataRecord = new DataRecord();
-        dataRecord.setReference(reference);
+        dataRecord.setReference(Long.parseLong(reference));
         dataRecord.setDescription(description);
-        dataRecord.setStartBalance(startBalance);
-        dataRecord.setMutation(mutation);
-        dataRecord.setEndBalance(endBalance);
+        dataRecord.setStartBalance(new BigDecimal(startBalance));
+        dataRecord.setMutation(new BigDecimal(mutation));
+        dataRecord.setEndBalance(new BigDecimal(endBalance));
         return dataRecord;
     }
 
