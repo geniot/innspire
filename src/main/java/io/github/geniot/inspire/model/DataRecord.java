@@ -1,4 +1,4 @@
-package io.github.geniot.inspire;
+package io.github.geniot.inspire.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;

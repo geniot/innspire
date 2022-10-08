@@ -1,6 +1,10 @@
 package io.github.geniot.inspire;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import io.github.geniot.inspire.model.DataRecord;
+import io.github.geniot.inspire.model.InvalidType;
+import io.github.geniot.inspire.model.ValidationError;
+import io.github.geniot.inspire.model.ValidationReport;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
@@ -22,8 +26,8 @@ public class Main {
 
     }
 
-    public static String validate(DataRecord[] dataRecords) {
-        StringBuilder validationReport = new StringBuilder();
+    public static ValidationReport validate(DataRecord[] dataRecords) {
+        ValidationReport validationReport = new ValidationReport();
         Set<String> transactionReferences = new HashSet<>();
         for (DataRecord dataRecord : dataRecords) {
 
@@ -37,17 +41,18 @@ public class Main {
             transactionReferences.add(dataRecord.getReference());
 
             if (isDuplicate || isEndBalanceIncorrect) {
-                validationReport.append(dataRecord.getReference());
-                validationReport.append('\t');
-                validationReport.append(dataRecord.getDescription());
-
-                validationReport.append(isDuplicate ? "\t- duplicate" : "");
-                validationReport.append(isEndBalanceIncorrect ? "\t- end balance incorrect" : "");
-
-                validationReport.append(System.lineSeparator());
+                ValidationError validationError = new ValidationError();
+                validationError.setDataRecord(dataRecord);
+                if (isDuplicate) {
+                    validationError.getInvalidTypes().add(InvalidType.DUPLICATE);
+                }
+                if (isEndBalanceIncorrect) {
+                    validationError.getInvalidTypes().add(InvalidType.END_BALANCE_INCORRECT);
+                }
+                validationReport.getValidationErrors().add(validationError);
             }
         }
-        return validationReport.toString();
+        return validationReport;
     }
 
     public static DataRecord[] processXML() {

@@ -2,50 +2,83 @@ package io.github.geniot;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.geniot.inspire.DataRecord;
+import io.github.geniot.inspire.model.DataRecord;
 import io.github.geniot.inspire.Main;
+import io.github.geniot.inspire.model.InvalidType;
+import io.github.geniot.inspire.model.ValidationError;
+import io.github.geniot.inspire.model.ValidationReport;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+
 public class ValidationTest {
+
     @Test
-    public void testValidation() {
+    public void testValidationSingle() {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
 
-            DataRecord[] dataRecords = objectMapper.readValue(
-                    "[{\"reference\":\"1234\",\"startBalance\":\"0\",\"mutation\":\"0\",\"endBalance\":\"0\"}]"
-                    , DataRecord[].class);
-            Assertions.assertEquals("", Main.validate(dataRecords));
+            DataRecord dataRecord = buildDataRecord("1234", "desc1", "0", "0", "0");
+            Assertions.assertEquals(new ValidationReport().toString(), Main.validate(new DataRecord[]{dataRecord}).toString());
 
-            dataRecords = objectMapper.readValue(
-                    "[{\"reference\":\"1234\",\"startBalance\":\"0\",\"mutation\":\"0\",\"endBalance\":\"0\"}," +
-                            "{\"reference\":\"1235\",\"startBalance\":\"0\",\"mutation\":\"0\",\"endBalance\":\"0\"}]"
-                    , DataRecord[].class);
-            Assertions.assertEquals("", Main.validate(dataRecords));
+            dataRecord = buildDataRecord("1234", "desc1", "0", "1", "0");
+            ValidationReport expectedReport = new ValidationReport();
+            expectedReport.getValidationErrors().add(buildValidationError(dataRecord, new LinkedHashSet<>(List.of(InvalidType.END_BALANCE_INCORRECT))));
+            Assertions.assertEquals(expectedReport.toString(), Main.validate(new DataRecord[]{dataRecord}).toString());
 
-            dataRecords = objectMapper.readValue(
-                    "[{\"reference\":\"1234\",\"startBalance\":\"0\",\"mutation\":\"0\",\"endBalance\":\"0\"}," +
-                            "{\"reference\":\"1234\",\"startBalance\":\"0\",\"mutation\":\"0\",\"endBalance\":\"0\",\"description\":\"desc\"}]"
-                    , DataRecord[].class);
-            Assertions.assertEquals("1234\tdesc\t- duplicate" + System.lineSeparator(), Main.validate(dataRecords));
-
-            dataRecords = objectMapper.readValue(
-                    "[{\"reference\":\"1234\",\"startBalance\":\"0\",\"mutation\":\"1\",\"endBalance\":\"0\",\"description\":\"desc\"}]"
-                    , DataRecord[].class);
-            Assertions.assertEquals("1234\tdesc\t- end balance incorrect" + System.lineSeparator(), Main.validate(dataRecords));
-
-            dataRecords = objectMapper.readValue(
-                    "[{\"reference\":\"1234\",\"startBalance\":\"0\",\"mutation\":\"1\",\"endBalance\":\"0\",\"description\":\"desc1\"}," +
-                            "{\"reference\":\"1234\",\"startBalance\":\"0\",\"mutation\":\"0\",\"endBalance\":\"0\",\"description\":\"desc2\"}]"
-                    , DataRecord[].class);
-            Assertions.assertEquals(
-                    "1234\tdesc1\t- end balance incorrect" + System.lineSeparator() +
-                            "1234\tdesc2\t- duplicate" + System.lineSeparator()
-                    , Main.validate(dataRecords));
-
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void testValidationMultiple() {
+        try {
+            DataRecord dataRecord1 = buildDataRecord("1234", "desc1", "0", "0", "0");
+            DataRecord dataRecord2 = buildDataRecord("1235", "desc2", "0", "0", "0");
+            Assertions.assertEquals(new ValidationReport().toString(), Main.validate(new DataRecord[]{dataRecord1, dataRecord2}).toString());
+
+            dataRecord1 = buildDataRecord("1234", "desc1", "0", "0", "0");
+            dataRecord2 = buildDataRecord("1234", "desc2", "0", "0", "0");
+            ValidationReport expectedReport = new ValidationReport();
+            expectedReport.getValidationErrors().add(buildValidationError(dataRecord2, new LinkedHashSet<>(List.of(InvalidType.DUPLICATE))));
+            Assertions.assertEquals(expectedReport.toString(), Main.validate(new DataRecord[]{dataRecord1, dataRecord2}).toString());
+
+            dataRecord1 = buildDataRecord("1234", "desc1", "0", "1", "0");
+            dataRecord2 = buildDataRecord("1235", "desc2", "0", "0", "0");
+            expectedReport = new ValidationReport();
+            expectedReport.getValidationErrors().add(buildValidationError(dataRecord1, new LinkedHashSet<>(List.of(InvalidType.END_BALANCE_INCORRECT))));
+            Assertions.assertEquals(expectedReport.toString(), Main.validate(new DataRecord[]{dataRecord1, dataRecord2}).toString());
+
+
+            dataRecord1 = buildDataRecord("1234", "desc1", "0", "1", "0");
+            dataRecord2 = buildDataRecord("1234", "desc2", "0", "0", "0");
+            expectedReport = new ValidationReport();
+            expectedReport.getValidationErrors().add(buildValidationError(dataRecord1, new LinkedHashSet<>(List.of(InvalidType.END_BALANCE_INCORRECT))));
+            expectedReport.getValidationErrors().add(buildValidationError(dataRecord2, new LinkedHashSet<>(List.of(InvalidType.DUPLICATE))));
+            Assertions.assertEquals(expectedReport.toString(), Main.validate(new DataRecord[]{dataRecord1, dataRecord2}).toString());
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private DataRecord buildDataRecord(String reference, String description, String startBalance, String mutation, String endBalance) {
+        DataRecord dataRecord = new DataRecord();
+        dataRecord.setReference(reference);
+        dataRecord.setDescription(description);
+        dataRecord.setStartBalance(startBalance);
+        dataRecord.setMutation(mutation);
+        dataRecord.setEndBalance(endBalance);
+        return dataRecord;
+    }
+
+    private ValidationError buildValidationError(DataRecord dataRecord, LinkedHashSet<InvalidType> invalidTypes) {
+        ValidationError validationError = new ValidationError();
+        validationError.setDataRecord(dataRecord);
+        validationError.setInvalidTypes(invalidTypes);
+        return validationError;
     }
 }
