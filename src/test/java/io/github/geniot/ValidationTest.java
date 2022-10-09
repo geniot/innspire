@@ -32,7 +32,7 @@ public class ValidationTest {
     }
 
     @Test
-    public void testValidationMultiple() {
+    public void testValidationDouble() {
         try {
             DataRecord dataRecord1 = buildDataRecord("1234", "desc1", "0", "0", "0");
             DataRecord dataRecord2 = buildDataRecord("1235", "desc2", "0", "0", "0");
@@ -57,6 +57,34 @@ public class ValidationTest {
             expectedReport.getValidationErrors().add(buildValidationError(dataRecord1, new LinkedHashSet<>(List.of(InvalidType.END_BALANCE_INCORRECT))));
             expectedReport.getValidationErrors().add(buildValidationError(dataRecord2, new LinkedHashSet<>(List.of(InvalidType.DUPLICATE))));
             Assertions.assertEquals(expectedReport.toString(), Main.validate(new DataRecord[]{dataRecord1, dataRecord2}).toString());
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void testValidationTriple() {
+        try {
+            DataRecord dataRecord1 = buildDataRecord("1234", "desc1", "0", "0", "0");
+            DataRecord dataRecord2 = buildDataRecord("1235", "desc2", "0", "0", "0");
+            DataRecord dataRecord3 = buildDataRecord("1236", "desc3", "0", "0", "0");
+            Assertions.assertEquals(new ValidationReport().toString(), Main.validate(new DataRecord[]{dataRecord1, dataRecord2, dataRecord3}).toString());
+
+            dataRecord1 = buildDataRecord("1234", "desc1", "0", "0", "0");
+            dataRecord2 = buildDataRecord("1234", "desc2", "0", "0", "0");
+            dataRecord3 = buildDataRecord("1235", "desc3", "0", "0", "0");
+            ValidationReport expectedReport = new ValidationReport();
+            expectedReport.getValidationErrors().add(buildValidationError(dataRecord2, new LinkedHashSet<>(List.of(InvalidType.DUPLICATE))));
+            Assertions.assertEquals(expectedReport.toString(), Main.validate(new DataRecord[]{dataRecord1, dataRecord2, dataRecord3}).toString());
+
+            dataRecord1 = buildDataRecord("1234", "desc1", "0", "1", "0");
+            dataRecord2 = buildDataRecord("1235", "desc2", "0", "0", "0");
+            dataRecord3 = buildDataRecord("1235", "desc3", "0", "0", "1");
+            expectedReport = new ValidationReport();
+            expectedReport.getValidationErrors().add(buildValidationError(dataRecord1, new LinkedHashSet<>(List.of(InvalidType.END_BALANCE_INCORRECT))));
+            expectedReport.getValidationErrors().add(buildValidationError(dataRecord3, new LinkedHashSet<>(List.of(InvalidType.DUPLICATE, InvalidType.END_BALANCE_INCORRECT))));
+            Assertions.assertEquals(expectedReport.toString(), Main.validate(new DataRecord[]{dataRecord1, dataRecord2, dataRecord3}).toString());
 
         } catch (Exception e) {
             throw new RuntimeException(e);
